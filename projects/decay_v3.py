@@ -31,6 +31,7 @@ def plot_numerical_and_exact(theta, I, a, T, dt):
     ylabel('u')
     title('theta=%g, dt=%g' % (theta, dt))
     savefig('plot_%s_%g.png' % (theta, dt))
+    show()
 
 def test_solver_three_steps():
     """Compare three steps with known manual computations."""
@@ -46,4 +47,8 @@ def test_solver_three_steps():
     tol = 1E-12  # tolerance for comparing floats
     diff = abs(u - u_by_hand).max()
     success = diff < tol
+    print("kjørt")
     assert success
+
+if __name__ == "__main__":
+    test_solver_three_steps()
