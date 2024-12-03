@@ -52,10 +52,25 @@ if __name__ == "__main__":
     a = -1
     N = 10
     dts = [0.6, 0.9, 1.1, 1.5]
+   
     for dt in dts:
         plot_numerical_and_exact(0, 1, a, N*dt, dt)
         plot_numerical_and_exact(0.5, 1, a, N*dt, dt)
         plot_numerical_and_exact(1, 1, a, N*dt, dt)
         plt.show()
+    
 
-#didn't do b)
+    def amp(theta, a, dt, c):
+        g = (1-(1-theta)*a*dt)/(1+theta*a*dt)
+        plt.axhline(g, label = f'theta = {theta}', color = c)
+
+    thetas = [0, 0.5, 1]
+    colours = ["r", "b", "g"]
+    index = 0
+    for theta in thetas:
+        amp(theta, a, 0.1, colours[index])
+        index += 1
+    plt.axhline(a, label = f'a = {a}', color = "k")
+    plt.legend()
+    plt.show()
+    
