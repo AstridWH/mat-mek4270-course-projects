@@ -10,6 +10,7 @@ We use various boundary conditions.
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
+from scipy import sparse
 
 t = sp.Symbol('t')
 
@@ -141,7 +142,23 @@ class VibFD2(VibSolver):
         assert T.is_integer() and T % 2 == 0
 
     def __call__(self):
-        u = np.zeros(self.Nt+1)
+        #D
+        D = sparse.diags([1, -2, 1], np.array([-1, 0, 1]), (self.Nt+1, self.Nt+1), 'csr')
+        D *= (1/self.dt**2)
+
+        #A
+        Id = sparse.eye(self.Nt+1)
+        A = D + self.w**2*Id
+        #A = A.tolil()
+        A[0, 0:3] = 1, 0, 0
+        A[-1, -3:] = 0, 0, 1
+
+        #b
+        b = np.zeros(self.Nt+1)
+        b[0] = self.I
+        b[-1] = self.I
+
+        u = sparse.linalg.spsolve(A, b)
         return u
 
 class VibFD3(VibSolver):
@@ -161,7 +178,21 @@ class VibFD3(VibSolver):
         assert T.is_integer() and T % 2 == 0
 
     def __call__(self):
-        u = np.zeros(self.Nt+1)
+        D = sparse.diags([1, -2, 1], np.array([-1, 0, 1]), (self.Nt+1, self.Nt+1), 'csr')
+        D *= (1/self.dt**2)
+
+        #A
+        Id = sparse.eye(self.Nt+1)
+        A = D + self.w**2*Id
+        #A = A.tolil()
+        A[0, 0:3] = 1, 0, 0
+        A[-1, -3:] = 1, -4, 3
+
+        #b
+        b = np.zeros(self.Nt+1)
+        b[0] = self.I
+
+        u = sparse.linalg.spsolve(A, b)
         return u
 
 class VibFD4(VibFD2):
@@ -173,9 +204,29 @@ class VibFD4(VibFD2):
     The boundary conditions require that T = n*pi/w, where n is an even integer.
     """
     order = 4
+    def __init__(self, Nt, T, w=0.35, I=1):
+        VibSolver.__init__(self, Nt, T, w, I)
 
     def __call__(self):
-        u = np.zeros(self.Nt+1)
+        D = sparse.diags([-1, 16, -30, 16, -1], np.array([-2, -1, 0, 1, 2]), (self.Nt+1, self.Nt+1), 'csr')
+        #D = D.tolil()
+        D[1, 0:6] = np.array([10, -15, -4, 14, -6, -1])
+        D[-2, -6:] = np.array([10, -15, -4, 14, -6, -1])[::-1]
+        D *= (1/(12*self.dt**2))
+
+        #A
+        Id = sparse.eye(self.Nt+1)
+        A = D + self.w**2*Id
+        #A = A.tolil()
+        A[0, 0:6] = 1, 0, 0, 0, 0, 0
+        A[-1, -6:] = 0, 0, 0, 0, 0, 1
+
+        #b
+        b = np.zeros(self.Nt+1)
+        b[0] = self.I
+        b[-1] = self.I
+
+        u = sparse.linalg.spsolve(A, b)
         return u
 
 def test_order():
@@ -186,4 +237,6 @@ def test_order():
     VibFD4(8, 2*np.pi/w, w).test_order(N0=20)
 
 if __name__ == '__main__':
-    test_order()
+    #test_order()
+    a = VibFD4(8, 2*np.pi/0.35, 0.35)
+    b = a()
